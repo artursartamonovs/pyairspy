@@ -169,6 +169,13 @@ airspy_sample_block_cb_fn = PYFUNCTYPE(c_int, POINTER(airspy_transfer_t))
 f = libairspy.airspy_lib_version
 f.restype, f.argtypes = None, [POINTER(airspy_lib_version_t)]
 
+#try to load the lib version if its wrong print out warning
+version = airspy_lib_version_t()
+libairspy.airspy_lib_version(byref(version))
+if False == ((int(version.major_version) == 1) and (int(version.minor_version) == 0) and (int(version.revision) == 11)):
+    print("Unsuported version of libairspy.")
+    print("Only supporting 1.0.11")
+    raise ImportError
 
 #/* airspy_init() deprecated */
 #extern ADDAPI int ADDCALL airspy_init(void);
@@ -288,7 +295,7 @@ f.restype, f.argtypes = c_int, [airspy_device_t_p, POINTER(c_uint8)]
 
 #/* Parameter length shall be at least 128bytes to avoid possible string clipping */
 #extern ADDAPI int ADDCALL airspy_version_string_read(struct airspy_device* device, char* version, uint8_t length);
-f = libairspy.airspy_board_id_read
+f = libairspy.airspy_version_string_read
 f.restype, f.argtypes = c_int, [airspy_device_t_p, c_char_p, c_uint8]
 
 #extern ADDAPI int ADDCALL airspy_board_partid_serialno_read(struct airspy_device* device, airspy_read_partid_serialno_t* read_partid_serialno);
