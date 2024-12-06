@@ -85,6 +85,8 @@ class airspy_board_id(enum.IntEnum):
 
 airspy_device_t_p = c_void_p
 
+RAW_BUFFER_COUNT = 8
+
 #typedef struct {
 #	struct airspy_device* device;
 #	void* ctx;
@@ -164,6 +166,124 @@ class airspy_lib_version_t(Structure):
 #typedef int (*airspy_sample_block_cb_fn)(airspy_transfer* transfer);
 airspy_sample_block_cb_fn = PYFUNCTYPE(c_int, POINTER(airspy_transfer_t))
 
+# from iqconverter_float.h
+#typedef struct {
+#	float avg;
+#	float hbc;
+#	int len;
+#	int fir_index;
+#	int delay_index;
+#	float *fir_kernel;
+#	float *fir_queue;
+#	float *delay_line;
+#} iqconverter_float_t;
+
+class iqconverter_float_t(Structure):
+    _fields_ = [("avg",POINTER(c_float)),
+                ("hbc",POINTER(c_float)),
+                ("len",c_int),
+                ("fir_index",c_int),
+                ("delay_index",c_int),
+                ("fir_kernel",POINTER(c_float)),
+                ("fir_queue",POINTER(c_float)),
+                ("delay_line",POINTER(c_float))]
+
+#typedef struct {
+#	int len;
+#	int fir_index;
+#	int delay_index;
+#	int16_t old_x;
+#	int16_t old_y;
+#	int32_t old_e;
+#	int32_t *fir_kernel;
+#	int32_t *fir_queue;
+#	int16_t *delay_line;
+#} iqconverter_int16_t;
+
+class iqconverter_int16_t(Structure):
+    _fields_ = [("len",c_int),
+                ("fir_index",c_int),
+                ("delay_index",c_int),
+                ("old_x",c_int16),
+                ("old_y",c_int16),
+                ("old_e",c_int32),
+                ("fir_kernel",POINTER(c_int32)),
+                ("fir_queue",POINTER(c_int32)),
+                ("delay_line",POINTER(c_int16))
+    ]
+
+#typedef struct airspy_device
+#{
+#	libusb_context* usb_context;
+#	libusb_device_handle* usb_device;
+#	struct libusb_transfer** transfers;
+#	airspy_sample_block_cb_fn callback;
+#	volatile bool streaming;
+#	volatile bool stop_requested;
+#	pthread_t transfer_thread;
+#	pthread_t consumer_thread;
+#	bool transfer_thread_running;
+#	bool consumer_thread_running;
+#	pthread_cond_t consumer_cv;
+#	pthread_mutex_t consumer_mp;
+#	uint32_t supported_samplerate_count;
+#	uint32_t *supported_samplerates;
+#	uint32_t transfer_count;
+#	uint32_t buffer_size;
+#	uint32_t dropped_buffers;
+#	uint32_t dropped_buffers_queue[RAW_BUFFER_COUNT];
+#	uint16_t *received_samples_queue[RAW_BUFFER_COUNT];
+#	volatile int received_samples_queue_head;
+#	volatile int received_samples_queue_tail;
+#	volatile int received_buffer_count;
+#	void *output_buffer;
+#	uint16_t *unpacked_samples;
+#	bool packing_enabled;
+#	iqconverter_float_t *cnv_f;
+#	iqconverter_int16_t *cnv_i;
+#	void* ctx;
+#	enum airspy_sample_type sample_type;
+#} airspy_device_t;
+
+"""
+class airspy_device_t(Structure):
+    _fields_ = [("usb_context",c_void_p),
+                ("usb_device",c_void_p),
+                ("transfers",c_void_p),
+                ("callback",airspy_sample_block_cb_fn),
+                ("steaming",c_bool),
+                ("stop_requested",c_bool),
+                ("transfer_thread",c_uint8*8),#pthread_t
+                ("consumer_thread",c_uint8*8),#pthread_t
+                ("transfer_thread_running",c_bool),
+                ("consumer_thread_running",c_bool),
+                ("consumer_cv",c_uint8*48),#pthread_cond_t
+                ("consumer_mp",c_uint8*40),#pthread_mutex_t
+                ("supported_samplerate_count",c_uint32),
+                ("supported_samplerates",POINTER(c_uint32)),
+                ("transfer_count",c_uint32),
+                ("buffer_size",c_uint32),
+                ("dropped_buffers",c_uint32),
+                ("dropped_buffers_queue",c_uint32*RAW_BUFFER_COUNT),
+                ("received_samples_queue",POINTER(c_uint16)*RAW_BUFFER_COUNT),
+                ("received_samples_queue_head",c_int),
+                ("received_samples_queue_tail",c_int),
+                ("received_buffer_count",c_int),
+                ("output_buffer",c_void_p),
+                ("unpacked_samples",POINTER(c_uint16)),
+                ("packing_enabled",c_bool),
+                ("cnv_f",POINTER(iqconverter_float_t)),
+                ("cnv_i",POINTER(iqconverter_int16_t)),
+                ("ctx",c_void_p),
+                ("sample_type",c_int) #enum
+                ]
+"""
+
+# Quick hack
+class airspy_device_t(Structure):
+    _fields_ = [("usb_context",c_uint8*352)]
+
+
 
 #extern ADDAPI void ADDCALL airspy_lib_version(airspy_lib_version_t* lib_version);
 f = libairspy.airspy_lib_version
@@ -196,7 +316,7 @@ f.restype, f.argtypes = c_int, [POINTER(airspy_device_t_p), c_int]
 
 #extern ADDAPI int ADDCALL airspy_open(struct airspy_device** device);
 f = libairspy.airspy_open
-f.restype, f.argtypes = c_int, [POINTER(airspy_device_t_p)]
+f.restype, f.argtypes = c_int, [POINTER(airspy_device_t)]
 
 #extern ADDAPI int ADDCALL airspy_close(struct airspy_device* device);
 f = libairspy.airspy_close
