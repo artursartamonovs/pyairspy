@@ -1,25 +1,17 @@
 #!/usr/bin/python3
-import os
 from ctypes import *
-import time
 import sys
-import wave
-import struct
+
 try:
     from airspy import *
 except ImportError:
     print("Probably unsuported version of libairspy")
     sys.exit(1)
-print("Check airspy version")
 
 AIRSPY_MAX_DEVICES=32
-
-#device = airspy_device_t_p(None)
 devices = [airspy_device_t() for i in range(0,AIRSPY_MAX_DEVICES)]
 
-print("airspy_device_t size=%d"%(sizeof(airspy_device_t)))
-#print("devices %d"%(sizeof(devices)))
-
+print("Check airspy version")
 p = airspy_lib_version_t()
 libairspy.airspy_lib_version(byref(p))
 print("Libairspy version %d.%d.%d"%(p.major_version, p.minor_version, p.revision))
