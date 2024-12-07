@@ -245,13 +245,13 @@ class iqconverter_int16_t(Structure):
 #	enum airspy_sample_type sample_type;
 #} airspy_device_t;
 
-"""
+
 class airspy_device_t(Structure):
     _fields_ = [("usb_context",c_void_p),
                 ("usb_device",c_void_p),
-                ("transfers",c_void_p),
-                ("callback",airspy_sample_block_cb_fn),
-                ("steaming",c_bool),
+                ("usb_transfers",c_void_p),
+                ("callback",c_void_p),
+                ("streaming",c_bool),
                 ("stop_requested",c_bool),
                 ("transfer_thread",c_uint8*8),#pthread_t
                 ("consumer_thread",c_uint8*8),#pthread_t
@@ -277,11 +277,11 @@ class airspy_device_t(Structure):
                 ("ctx",c_void_p),
                 ("sample_type",c_int) #enum
                 ]
-"""
+
 
 # Quick hack
-class airspy_device_t(Structure):
-    _fields_ = [("usb_context",c_uint8*352)]
+#class airspy_device_t(Structure):
+#    _fields_ = [("usb_context",c_uint8*352)]
 
 
 
@@ -316,7 +316,7 @@ f.restype, f.argtypes = c_int, [POINTER(airspy_device_t_p), c_int]
 
 #extern ADDAPI int ADDCALL airspy_open(struct airspy_device** device);
 f = libairspy.airspy_open
-f.restype, f.argtypes = c_int, [POINTER(airspy_device_t)]
+f.restype, f.argtypes = c_int, [POINTER(POINTER(airspy_device_t))]
 
 #extern ADDAPI int ADDCALL airspy_close(struct airspy_device* device);
 f = libairspy.airspy_close
