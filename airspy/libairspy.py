@@ -85,16 +85,11 @@ class airspy_board_id(enum.IntEnum):
 
 airspy_device_t_p = c_void_p
 
+
+
 RAW_BUFFER_COUNT = 8
 
-#typedef struct {
-#	struct airspy_device* device;
-#	void* ctx;
-#	void* samples;
-#	int sample_count;
-#	uint64_t dropped_samples;
-#	enum airspy_sample_type sample_type;
-#} airspy_transfer_t, airspy_transfer;
+
 class StructureWithEnums(Structure):
     """Add missing enum feature to ctypes Structures.
     """
@@ -128,6 +123,14 @@ class StructureWithEnums(Structure):
 
 #structures with enum
 #https://gist.github.com/christoph2/9c390e5c094796903097
+#typedef struct {
+#	struct airspy_device* device;
+#	void* ctx;
+#	void* samples;
+#	int sample_count;
+#	uint64_t dropped_samples;
+#	enum airspy_sample_type sample_type;
+#} airspy_transfer_t, airspy_transfer;
 class airspy_transfer_t(Structure):
     _fields_ = [("device",airspy_device_t_p),
                 ("ctx",c_void_p),
@@ -137,10 +140,11 @@ class airspy_transfer_t(Structure):
                 ("sample_type",c_int)]
                 #]
     _map_ = {
-    	"samples":airspy_sample_type
+    	"sample_type":airspy_sample_type
     }
-                
+
 airspy_transfer_t_p = POINTER(airspy_transfer_t)
+airspy_sample_block_cb_fn = PYFUNCTYPE(c_int, POINTER(airspy_transfer_t))
 
 #typedef struct {
 #	uint32_t part_id[2];
@@ -164,7 +168,7 @@ class airspy_lib_version_t(Structure):
 
 
 #typedef int (*airspy_sample_block_cb_fn)(airspy_transfer* transfer);
-airspy_sample_block_cb_fn = PYFUNCTYPE(c_int, POINTER(airspy_transfer_t))
+
 
 # from iqconverter_float.h
 #typedef struct {
@@ -245,7 +249,7 @@ class iqconverter_int16_t(Structure):
 #	enum airspy_sample_type sample_type;
 #} airspy_device_t;
 
-
+"""
 class airspy_device_t(Structure):
     _fields_ = [("usb_context",c_void_p),
                 ("usb_device",c_void_p),
@@ -277,11 +281,11 @@ class airspy_device_t(Structure):
                 ("ctx",c_void_p),
                 ("sample_type",c_int) #enum
                 ]
-
+"""
 
 # Quick hack
-#class airspy_device_t(Structure):
-#    _fields_ = [("usb_context",c_uint8*352)]
+class airspy_device_t(Structure):
+    _fields_ = [("usb_context",c_uint8*352)]
 
 
 
@@ -496,4 +500,4 @@ f.restype, f.argtypes = c_int, [airspy_device_t_p, c_uint8]
 f = libairspy.airspy_spiflash_erase_sector
 f.restype, f.argtypes = c_int, [airspy_device_t_p, c_uint16]
 
-
+#__all__ = ["libairspy","airspy_lib_version_t","airspy_sample_block_cb_fn"," airspy_device_t"]

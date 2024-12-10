@@ -9,7 +9,7 @@ except ImportError:
     sys.exit(1)
 
 AIRSPY_MAX_DEVICES=32
-devices = [airspy_device_t() for i in range(0,AIRSPY_MAX_DEVICES)]
+devices = [POINTER(airspy_device_t)() for i in range(0,AIRSPY_MAX_DEVICES+1)]
 
 print("Check airspy version")
 p = airspy_lib_version_t()
@@ -33,7 +33,7 @@ print("Board ID Number: %s "%(str(board_id)))
 count = 0
 for i in range(0,AIRSPY_MAX_DEVICES):
     #ref = byref(devices[i])
-    res = libairspy.airspy_open(devices[i])
+    res = libairspy.airspy_open(byref(devices[i]))
     if (res != 0):
         break
     count += 1

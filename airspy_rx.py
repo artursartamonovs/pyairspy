@@ -20,6 +20,8 @@ devices = [POINTER(airspy_device_t)() for i in range(0,AIRSPY_MAX_DEVICES+1)]
 #print(f" device so={sizeof(device_)}")
 #device = byref(device_)
 
+print(f" airspy_transfer_t ={sizeof(airspy_transfer_t)}")
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-f","--frequency")
 parser.add_argument("-s","--samplerate")
@@ -49,7 +51,6 @@ if (count<1):
     exit(1)
 device = devices[0]
 
-
 #ret = libairspy.airspy_open(device)
 #if ret != airspy_error.AIRSPY_SUCCESS:
 #    print("Couldnt open device")
@@ -74,18 +75,38 @@ print("Supported samplerates")
 for i in range(0,count+1):
     print("%d"%(supported_samplerates[i]))
 
-""""
-libairspy.airspy_set_samplerate()
 
-libairspy.airspy_board_partid_serialno_read()
+ret = libairspy.airspy_set_samplerate(device,supported_samplerates[0])
+if ret != airspy_error.AIRSPY_SUCCESS:
+    print("Couldn't set samplerate")
+    sys.exit(1)
 
-libairspy.airspy_set_rf_bias()
+#libairspy.airspy_board_partid_serialno_read()
 
-libairspy.airspy_start_rx()
+#libairspy.airspy_set_rf_bias()
 
-libairspy.airspy_set_freq()
+def rx_callback(transfer):
+    print("RX callback")
+    print(f"Sample count {transfer.sample_count}")
+    return 0
 
-while (libairspy.airspy_is_streaming()):
-    pass
-"""
+print("Here 1")
+ret = libairspy.airspy_start_rx(device, airspy_sample_block_cb_fn(rx_callback), None)
+if ret != airspy_error.AIRSPY_SUCCESS:
+    print("Cant start RX")
+    sys.exit(1)
+print("Here 2")
+libairspy.airspy_set_freq(device, 100000000) #100M
+print("Here 3")
+time.sleep(5)
+print("Here 4")
+count = 10
+while (count>0) and (libairspy.airspy_is_streaming(device) == airspy_error.AIRSPY_TRUE):
+    time.sleep(1)
+    count -= 1
+
+
+print("Here 4")
+libairspy.airspy_close(device)
+
 libairspy.airspy_exit()
